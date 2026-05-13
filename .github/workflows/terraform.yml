@@ -25,8 +25,6 @@ env:
   TF_INPUT: "false"
   TF_CLOUD_ORGANIZATION: ${{ vars.TF_CLOUD_ORGANIZATION }}
   TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
-  TF_WORKSPACE_HMG: ${{ vars.TF_WORKSPACE_HMG || 'fiap-mecanica-db-hmg' }}
-  TF_WORKSPACE_PROD: ${{ vars.TF_WORKSPACE_PROD || 'fiap-mecanica-db-prod' }}
 
 jobs:
   plan-hmg:
@@ -35,7 +33,7 @@ jobs:
     if: github.event_name == 'pull_request' && github.base_ref == 'develop'
     environment: Homolog
     env:
-      TF_WORKSPACE: ${{ env.TF_WORKSPACE_HMG }}
+      TF_WORKSPACE: ${{ vars.TF_WORKSPACE_HMG || 'fiap-mecanica-db-hmg' }}
 
     steps:
       - name: Checkout
@@ -77,7 +75,7 @@ jobs:
     if: github.event_name == 'pull_request' && github.base_ref == 'main'
     environment: Production
     env:
-      TF_WORKSPACE: ${{ env.TF_WORKSPACE_PROD }}
+      TF_WORKSPACE: ${{ vars.TF_WORKSPACE_PROD || 'fiap-mecanica-db-prod' }}
 
     steps:
       - name: Checkout
@@ -119,7 +117,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     environment: Homolog
     env:
-      TF_WORKSPACE: ${{ env.TF_WORKSPACE_HMG }}
+      TF_WORKSPACE: ${{ vars.TF_WORKSPACE_HMG || 'fiap-mecanica-db-hmg' }}
 
     steps:
       - name: Checkout
@@ -165,7 +163,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: Production
     env:
-      TF_WORKSPACE: ${{ env.TF_WORKSPACE_PROD }}
+      TF_WORKSPACE: ${{ vars.TF_WORKSPACE_PROD || 'fiap-mecanica-db-prod' }}
 
     steps:
       - name: Checkout
