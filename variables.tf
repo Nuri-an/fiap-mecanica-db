@@ -16,8 +16,13 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
-variable "docker_image" {
-  description = "Docker image URI for the application (e.g. ghcr.io/user/fiap-mecanica:latest)"
+variable "tfc_organization" {
+  description = "Terraform Cloud organization that hosts the shared infrastructure workspace"
+  type        = string
+}
+
+variable "platform_workspace_name" {
+  description = "Terraform Cloud workspace name for the shared platform or kubernetes infrastructure"
   type        = string
 }
 
@@ -30,12 +35,6 @@ variable "db_username" {
 
 variable "db_password" {
   description = "PostgreSQL database password"
-  type        = string
-  sensitive   = true
-}
-
-variable "jwt_secret" {
-  description = "Secret key for JWT token signing"
   type        = string
   sensitive   = true
 }
