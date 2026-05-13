@@ -84,7 +84,7 @@ The database repository also uses `data "terraform_remote_state"` to read output
 - `private_subnet_ids`
 - `app_security_group`
 
-These outputs must exist in the remote platform workspace or in `fiap-mecanica-k8s`.
+These outputs must exist in the remote platform workspace or in `fiap-mecanica-api`.
 
 ## Inputs
 
@@ -97,7 +97,7 @@ Required variables to create the RDS inside the network/cluster:
 
 After a successful apply, the workflow exports the Terraform output
 `database_url` and updates the `DATABASE_URL` GitHub secret in the
-`fiap-mecanica-k8s` repository.
+`fiap-mecanica-api` repository.
 
 This requires:
 
