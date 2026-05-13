@@ -34,6 +34,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && github.base_ref == 'develop'
     environment: Homolog
+    env:
+      TF_WORKSPACE: ${{ env.TF_WORKSPACE_HMG }}
 
     steps:
       - name: Checkout
@@ -62,8 +64,6 @@ jobs:
 
       - name: Terraform init
         run: terraform init
-        env:
-          TF_WORKSPACE: ${{ env.TF_WORKSPACE_HMG }}
 
       - name: Terraform validate
         run: terraform validate
@@ -76,6 +76,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && github.base_ref == 'main'
     environment: Production
+    env:
+      TF_WORKSPACE: ${{ env.TF_WORKSPACE_PROD }}
 
     steps:
       - name: Checkout
@@ -104,8 +106,6 @@ jobs:
 
       - name: Terraform init
         run: terraform init
-        env:
-          TF_WORKSPACE: ${{ env.TF_WORKSPACE_PROD }}
 
       - name: Terraform validate
         run: terraform validate
@@ -118,6 +118,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
     environment: Homolog
+    env:
+      TF_WORKSPACE: ${{ env.TF_WORKSPACE_HMG }}
 
     steps:
       - name: Checkout
@@ -143,8 +145,6 @@ jobs:
 
       - name: Terraform init
         run: terraform init
-        env:
-          TF_WORKSPACE: ${{ env.TF_WORKSPACE_HMG }}
 
       - name: Terraform apply
         run: terraform apply -auto-approve
@@ -164,6 +164,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: Production
+    env:
+      TF_WORKSPACE: ${{ env.TF_WORKSPACE_PROD }}
 
     steps:
       - name: Checkout
@@ -189,8 +191,6 @@ jobs:
 
       - name: Terraform init
         run: terraform init
-        env:
-          TF_WORKSPACE: ${{ env.TF_WORKSPACE_PROD }}
 
       - name: Terraform apply
         run: terraform apply -auto-approve
