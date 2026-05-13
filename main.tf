@@ -8,7 +8,13 @@ terraform {
     }
   }
 
-  cloud {}
+  cloud {
+    organization = "fiap_mecanica"
+
+    workspaces {
+      tags = ["fiap-mecanica-db"]
+    }
+  }
 }
 
 provider "aws" {
