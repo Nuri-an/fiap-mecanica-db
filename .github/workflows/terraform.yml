@@ -1,4 +1,4 @@
-name: Terraform Cloud Test (fiap-mecanica-db)
+name: Terraform Cloud (fiap-mecanica-db)
 
 on:
   pull_request:
@@ -58,7 +58,9 @@ jobs:
           EOF
 
       - name: Terraform init
-        run: terraform init -reconfigure -backend-config="organization=${{ env.TF_CLOUD_ORGANIZATION }}" -backend-config="workspaces.name=${{ env.TF_WORKSPACE_HMG }}"
+        run: terraform init"
+        env:
+          TF_WORKSPACE: ${{ env.TF_WORKSPACE_HMG }}
 
       - name: Terraform fmt (check)
         run: terraform fmt -check -recursive
@@ -98,7 +100,9 @@ jobs:
           EOF
 
       - name: Terraform init
-        run: terraform init -reconfigure -backend-config="organization=${{ env.TF_CLOUD_ORGANIZATION }}" -backend-config="workspaces.name=${{ env.TF_WORKSPACE_PROD }}"
+        run: terraform init"
+        env:
+          TF_WORKSPACE: ${{ env.TF_WORKSPACE_HMG }}
 
       - name: Terraform fmt (check)
         run: terraform fmt -check -recursive
@@ -138,7 +142,9 @@ jobs:
           EOF
 
       - name: Terraform init
-        run: terraform init -reconfigure -backend-config="organization=${{ env.TF_CLOUD_ORGANIZATION }}" -backend-config="workspaces.name=${{ env.TF_WORKSPACE_HMG }}"
+        run: terraform init"
+        env:
+          TF_WORKSPACE: ${{ env.TF_WORKSPACE_HMG }}
 
       - name: Terraform apply
         run: terraform apply -auto-approve
@@ -182,7 +188,9 @@ jobs:
           EOF
 
       - name: Terraform init
-        run: terraform init -reconfigure -backend-config="organization=${{ env.TF_CLOUD_ORGANIZATION }}" -backend-config="workspaces.name=${{ env.TF_WORKSPACE_PROD }}"
+        run: terraform init"
+        env:
+          TF_WORKSPACE: ${{ env.TF_WORKSPACE_HMG }}
 
       - name: Terraform apply
         run: terraform apply -auto-approve
