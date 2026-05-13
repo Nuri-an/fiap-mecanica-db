@@ -45,6 +45,9 @@ jobs:
           terraform_version: "1.5.7"
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
+      - name: Terraform fmt (check)
+        run: terraform fmt -check -recursive
+
       - name: Select Terraform Cloud workspace
         run: |
           cat > terraform.auto.tfvars <<'EOF'
@@ -61,9 +64,6 @@ jobs:
         run: terraform init
         env:
           TF_WORKSPACE: ${{ env.TF_WORKSPACE_HMG }}
-
-      - name: Terraform fmt (check)
-        run: terraform fmt -check -recursive
 
       - name: Terraform validate
         run: terraform validate
@@ -87,6 +87,9 @@ jobs:
           terraform_version: "1.5.7"
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
+      - name: Terraform fmt (check)
+        run: terraform fmt -check -recursive
+
       - name: Select Terraform Cloud workspace
         run: |
           cat > terraform.auto.tfvars <<'EOF'
@@ -103,9 +106,6 @@ jobs:
         run: terraform init
         env:
           TF_WORKSPACE: ${{ env.TF_WORKSPACE_PROD }}
-
-      - name: Terraform fmt (check)
-        run: terraform fmt -check -recursive
 
       - name: Terraform validate
         run: terraform validate
