@@ -6,11 +6,13 @@ on:
     paths:
       - "**.tf"
       - "modules/**"
+      - ".github/workflows/*"
   push:
     branches: ["develop", "main"]
     paths:
       - "**.tf"
       - "modules/**"
+      - ".github/workflows/*"
   workflow_dispatch: {}
 
 permissions:
@@ -156,7 +158,7 @@ jobs:
       - name: Export DATABASE_URL to GitHub Actions secret
         run: |
           DATABASE_URL=$(terraform output -raw database_url)
-          gh secret set DATABASE_URL --body "$DATABASE_URL" --repo Nuri-an/fiap-mecanica-k8s
+          gh secret set DATABASE_URL --body "$DATABASE_URL" --repo Nuri-an/fiap-mecanica-api
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
 
