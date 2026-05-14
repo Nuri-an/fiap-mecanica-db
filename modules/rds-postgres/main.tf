@@ -36,10 +36,10 @@ resource "aws_security_group" "rds" {
 resource "aws_db_instance" "main" {
   identifier        = "${var.project_name}-db"
   engine            = "postgres"
-  engine_version    = "15.4"
+  engine_version    = "15"
   instance_class    = "db.t3.micro"
   allocated_storage = 20
-  storage_type      = "gp3"
+  storage_type      = "gp2"
   storage_encrypted = true
 
   db_name  = "fiapmecanica"
@@ -49,9 +49,7 @@ resource "aws_db_instance" "main" {
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [aws_security_group.rds.id]
 
-  backup_retention_period = 7
-  backup_window           = "03:00-04:00"
-  maintenance_window      = "Mon:04:00-Mon:05:00"
+  maintenance_window = "Mon:04:00-Mon:05:00"
 
   skip_final_snapshot       = false
   final_snapshot_identifier = "${var.project_name}-final-snapshot"
