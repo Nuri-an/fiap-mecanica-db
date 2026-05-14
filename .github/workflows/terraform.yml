@@ -34,6 +34,7 @@ jobs:
     environment: Homolog
     env:
       TF_WORKSPACE: ${{ vars.TF_WORKSPACE_HMG || 'fiap-mecanica-db-hmg' }}
+      TF_PLATFORM_WORKSPACE: ${{ vars.TF_PLATFORM_WORKSPACE_HMG }}
 
     steps:
       - name: Checkout
@@ -55,7 +56,7 @@ jobs:
           environment        = "hmg"
           aws_region         = "${{ vars.AWS_REGION || 'us-east-1' }}"
           tfc_organization   = "${{ vars.TF_CLOUD_ORGANIZATION }}"
-          platform_workspace_name = "${{ vars.TF_WORKSPACE_HMG }}"
+          platform_workspace_name = "${{ env.TF_PLATFORM_WORKSPACE }}"
           db_username        = "${{ secrets.DB_USERNAME }}"
           db_password        = "${{ secrets.DB_PASSWORD }}"
           EOF
@@ -76,6 +77,7 @@ jobs:
     environment: Production
     env:
       TF_WORKSPACE: ${{ vars.TF_WORKSPACE_PROD || 'fiap-mecanica-db-prod' }}
+      TF_PLATFORM_WORKSPACE: ${{ vars.TF_PLATFORM_WORKSPACE_PROD }}
 
     steps:
       - name: Checkout
@@ -97,7 +99,7 @@ jobs:
           environment        = "prod"
           aws_region         = "${{ vars.AWS_REGION || 'us-east-1' }}"
           tfc_organization   = "${{ vars.TF_CLOUD_ORGANIZATION }}"
-          platform_workspace_name = "${{ vars.TF_WORKSPACE_PROD }}"
+          platform_workspace_name = "${{ env.TF_PLATFORM_WORKSPACE }}"
           db_username        = "${{ secrets.DB_USERNAME }}"
           db_password        = "${{ secrets.DB_PASSWORD }}"
           EOF
@@ -118,6 +120,7 @@ jobs:
     environment: Homolog
     env:
       TF_WORKSPACE: ${{ vars.TF_WORKSPACE_HMG || 'fiap-mecanica-db-hmg' }}
+      TF_PLATFORM_WORKSPACE: ${{ vars.TF_PLATFORM_WORKSPACE_HMG }}
 
     steps:
       - name: Checkout
@@ -136,7 +139,7 @@ jobs:
           environment        = "hmg"
           aws_region         = "${{ vars.AWS_REGION || 'us-east-1' }}"
           tfc_organization   = "${{ vars.TF_CLOUD_ORGANIZATION }}"
-          platform_workspace_name = "${{ vars.TF_WORKSPACE_HMG }}"
+          platform_workspace_name = "${{ env.TF_PLATFORM_WORKSPACE }}"
           db_username        = "${{ secrets.DB_USERNAME }}"
           db_password        = "${{ secrets.DB_PASSWORD }}"
           EOF
@@ -164,6 +167,7 @@ jobs:
     environment: Production
     env:
       TF_WORKSPACE: ${{ vars.TF_WORKSPACE_PROD || 'fiap-mecanica-db-prod' }}
+      TF_PLATFORM_WORKSPACE: ${{ vars.TF_PLATFORM_WORKSPACE_PROD }}
 
     steps:
       - name: Checkout
@@ -182,7 +186,7 @@ jobs:
           environment        = "prod"
           aws_region         = "${{ vars.AWS_REGION || 'us-east-1' }}"
           tfc_organization   = "${{ vars.TF_CLOUD_ORGANIZATION }}"
-          platform_workspace_name = "${{ vars.TF_WORKSPACE_PROD }}"
+          platform_workspace_name = "${{ env.TF_PLATFORM_WORKSPACE }}"
           db_username        = "${{ secrets.DB_USERNAME }}"
           db_password        = "${{ secrets.DB_PASSWORD }}"
           EOF

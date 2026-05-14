@@ -26,6 +26,8 @@ Required vars:
 - `TF_CLOUD_ORGANIZATION`
 - `TF_WORKSPACE_HMG`
 - `TF_WORKSPACE_PROD`
+- `TF_PLATFORM_WORKSPACE_HMG`
+- `TF_PLATFORM_WORKSPACE_PROD`
 
 Optional vars:
 
@@ -48,8 +50,10 @@ Recommended source for secrets:
 Recommended source for vars:
 
 - `TF_CLOUD_ORGANIZATION`: manually configured in GitHub, Terraform Cloud organization name
-- `TF_WORKSPACE_HMG`: manually configured in GitHub, remote workspace name for shared homolog infrastructure
-- `TF_WORKSPACE_PROD`: manually configured in GitHub, remote workspace name for shared production infrastructure
+- `TF_WORKSPACE_HMG`: manually configured in GitHub, Terraform Cloud workspace name for this repository's homolog database workspace
+- `TF_WORKSPACE_PROD`: manually configured in GitHub, Terraform Cloud workspace name for this repository's production database workspace
+- `TF_PLATFORM_WORKSPACE_HMG`: manually configured in GitHub, Terraform Cloud workspace name for the shared homolog infrastructure/platform state
+- `TF_PLATFORM_WORKSPACE_PROD`: manually configured in GitHub, Terraform Cloud workspace name for the shared production infrastructure/platform state
 - `AWS_REGION`: manually configured in GitHub, or default `us-east-1`
 - `PROJECT_NAME`: manually configured in GitHub, or default `fiap-mecanica-db`
 
