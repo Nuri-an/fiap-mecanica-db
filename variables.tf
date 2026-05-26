@@ -16,16 +16,6 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
-variable "tfc_organization" {
-  description = "Terraform Cloud organization that hosts the shared infrastructure workspace"
-  type        = string
-}
-
-variable "platform_workspace_name" {
-  description = "Terraform Cloud workspace name for the shared platform or kubernetes infrastructure"
-  type        = string
-}
-
 variable "db_username" {
   description = "PostgreSQL database username"
   type        = string

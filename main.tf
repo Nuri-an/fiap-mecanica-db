@@ -8,12 +8,10 @@ terraform {
     }
   }
 
-  cloud {
-    organization = "fiap_mecanica"
-
-    workspaces {
-      tags = ["fiap-mecanica-db"]
-    }
+  backend "s3" {
+    bucket = "fiap-mecanica-terraform-state"
+    key    = "db/terraform.tfstate"
+    region = "us-east-1"
   }
 }
 
@@ -22,13 +20,11 @@ provider "aws" {
 }
 
 data "terraform_remote_state" "platform" {
-  backend = "remote"
-
+  backend = "s3"
   config = {
-    organization = var.tfc_organization
-    workspaces = {
-      name = var.platform_workspace_name
-    }
+    bucket = "fiap-mecanica-terraform-state"
+    key    = "k8s/terraform.tfstate"
+    region = var.aws_region
   }
 }
 

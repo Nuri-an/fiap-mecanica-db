@@ -1,210 +1,91 @@
-name: Terraform Cloud (fiap-mecanica-db)
+name: Terraform (Database)
 
 on:
-  pull_request:
-    branches: ["develop", "main"]
-    paths:
-      - "**.tf"
-      - "modules/**"
-      - ".github/workflows/*"
   push:
-    branches: ["develop", "main"]
-    paths:
-      - "**.tf"
-      - "modules/**"
-      - ".github/workflows/*"
-  workflow_dispatch: {}
-
-permissions:
-  contents: read
-
-concurrency:
-  group: terraform-cloud-database-${{ github.ref }}
-  cancel-in-progress: true
+    branches: [develop, main]
+  pull_request:
+    branches: [main]
 
 env:
-  TF_IN_AUTOMATION: "true"
-  TF_INPUT: "false"
-  TF_CLOUD_ORGANIZATION: ${{ vars.TF_CLOUD_ORGANIZATION }}
-  TF_API_TOKEN: ${{ secrets.TF_API_TOKEN }}
+  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+  API_REPOSITORY: ${{ vars.API_REPOSITORY || '' }}
+  TF_VAR_project_name: fiap-mecanica
+  TF_VAR_db_username: ${{ secrets.DB_USERNAME }}
+  TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
 
 jobs:
-  plan-hmg:
-    name: Plan Hmg (TFC)
+  plan:
+    name: Plan
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.base_ref == 'develop'
-    environment: Homolog
-    env:
-      TF_WORKSPACE: ${{ vars.TF_WORKSPACE_HMG || 'fiap-mecanica-db-hmg' }}
-      TF_PLATFORM_WORKSPACE: ${{ vars.TF_PLATFORM_WORKSPACE_HMG }}
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.5.7"
-          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
-
-      - name: Terraform fmt (check)
-        run: terraform fmt -check -recursive
-
-      - name: Select Terraform Cloud workspace
-        run: |
-          cat > terraform.auto.tfvars <<'EOF'
-          project_name       = "${{ vars.PROJECT_NAME || 'fiap-mecanica-db' }}"
-          environment        = "hmg"
-          aws_region         = "${{ vars.AWS_REGION || 'us-east-1' }}"
-          tfc_organization   = "${{ vars.TF_CLOUD_ORGANIZATION }}"
-          platform_workspace_name = "${{ env.TF_PLATFORM_WORKSPACE }}"
-          db_username        = "${{ secrets.DB_USERNAME }}"
-          db_password        = "${{ secrets.DB_PASSWORD }}"
-          EOF
 
       - name: Terraform init
         run: terraform init
+
+      - name: Terraform fmt
+        run: terraform fmt -check -recursive
 
       - name: Terraform validate
         run: terraform validate
 
       - name: Terraform plan
-        run: terraform plan -no-color
+        env:
+          TF_VAR_environment: ${{ github.ref_name == 'main' && 'prod' || 'hmg' }}
+        run: terraform plan
 
-  plan-prod:
-    name: Plan Prod (TFC)
+  apply:
+    name: Apply
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.base_ref == 'main'
-    environment: Production
-    env:
-      TF_WORKSPACE: ${{ vars.TF_WORKSPACE_PROD || 'fiap-mecanica-db-prod' }}
-      TF_PLATFORM_WORKSPACE: ${{ vars.TF_PLATFORM_WORKSPACE_PROD }}
+    needs: plan
+    if: github.event_name == 'push'
+    permissions:
+      id-token: write
+      contents: read
+    environment: ${{ github.ref_name == 'main' && 'production' || 'staging' }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          terraform_version: "1.5.7"
-          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
-
-      - name: Terraform fmt (check)
-        run: terraform fmt -check -recursive
-
-      - name: Select Terraform Cloud workspace
-        run: |
-          cat > terraform.auto.tfvars <<'EOF'
-          project_name       = "${{ vars.PROJECT_NAME || 'fiap-mecanica-db' }}"
-          environment        = "prod"
-          aws_region         = "${{ vars.AWS_REGION || 'us-east-1' }}"
-          tfc_organization   = "${{ vars.TF_CLOUD_ORGANIZATION }}"
-          platform_workspace_name = "${{ env.TF_PLATFORM_WORKSPACE }}"
-          db_username        = "${{ secrets.DB_USERNAME }}"
-          db_password        = "${{ secrets.DB_PASSWORD }}"
-          EOF
-
-      - name: Terraform init
-        run: terraform init
-
-      - name: Terraform validate
-        run: terraform validate
-
-      - name: Terraform plan
-        run: terraform plan -no-color
-
-  apply-hmg:
-    name: Apply Hmg (TFC)
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
-    environment: Homolog
-    env:
-      TF_WORKSPACE: ${{ vars.TF_WORKSPACE_HMG || 'fiap-mecanica-db-hmg' }}
-      TF_PLATFORM_WORKSPACE: ${{ vars.TF_PLATFORM_WORKSPACE_HMG }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.5.7"
-          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
-
-      - name: Write tfvars
-        run: |
-          cat > terraform.auto.tfvars <<'EOF'
-          project_name       = "${{ vars.PROJECT_NAME || 'fiap-mecanica-db' }}"
-          environment        = "hmg"
-          aws_region         = "${{ vars.AWS_REGION || 'us-east-1' }}"
-          tfc_organization   = "${{ vars.TF_CLOUD_ORGANIZATION }}"
-          platform_workspace_name = "${{ env.TF_PLATFORM_WORKSPACE }}"
-          db_username        = "${{ secrets.DB_USERNAME }}"
-          db_password        = "${{ secrets.DB_PASSWORD }}"
-          EOF
 
       - name: Terraform init
         run: terraform init
 
       - name: Terraform apply
+        env:
+          TF_VAR_environment: ${{ github.ref_name == 'main' && 'prod' || 'hmg' }}
         run: terraform apply -auto-approve
 
-      - name: Install GitHub CLI
-        run: sudo apt install gh -y
-
-      - name: Export DATABASE_URL to GitHub Actions secret
+      - name: Export DB secret ARN
         run: |
-          DATABASE_URL=$(terraform output -raw database_url)
-          gh secret set DATABASE_URL --body "$DATABASE_URL" --repo Nuri-an/fiap-mecanica-api
+          echo "DB_SECRET_ARN=$(terraform output -raw db_secret_arn)" >> "$GITHUB_ENV"
+
+      - name: Sync DB secret ARN to API repository
+        if: ${{ env.API_REPOSITORY != '' }}
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
-
-  apply-prod:
-    name: Apply Prod (TFC)
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    environment: Production
-    env:
-      TF_WORKSPACE: ${{ vars.TF_WORKSPACE_PROD || 'fiap-mecanica-db-prod' }}
-      TF_PLATFORM_WORKSPACE: ${{ vars.TF_PLATFORM_WORKSPACE_PROD }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.5.7"
-          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
-
-      - name: Write tfvars
         run: |
-          cat > terraform.auto.tfvars <<'EOF'
-          project_name       = "${{ vars.PROJECT_NAME || 'fiap-mecanica-db' }}"
-          environment        = "prod"
-          aws_region         = "${{ vars.AWS_REGION || 'us-east-1' }}"
-          tfc_organization   = "${{ vars.TF_CLOUD_ORGANIZATION }}"
-          platform_workspace_name = "${{ env.TF_PLATFORM_WORKSPACE }}"
-          db_username        = "${{ secrets.DB_USERNAME }}"
-          db_password        = "${{ secrets.DB_PASSWORD }}"
-          EOF
-
-      - name: Terraform init
-        run: terraform init
-
-      - name: Terraform apply
-        run: terraform apply -auto-approve
-
-      - name: Install GitHub CLI
-        run: sudo apt install gh -y
-
-      - name: Export DATABASE_URL to GitHub Actions secret
-        run: |
-          DATABASE_URL=$(terraform output -raw database_url)
-          gh secret set DATABASE_URL --body "$DATABASE_URL" --repo Nuri-an/fiap-mecanica-api
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
+          gh secret set DB_SECRET_ARN --body "$DB_SECRET_ARN" --repo "$API_REPOSITORY"
