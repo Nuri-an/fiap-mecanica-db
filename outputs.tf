@@ -17,8 +17,8 @@ output "database_url" {
 }
 
 output "db_secret_arn" {
-  description = "Secrets Manager ARN for database URL"
-  value       = aws_secretsmanager_secret.database_url.arn
+  description = "Secrets Manager ARN for DB credentials (RDS proxy)"
+  value       = module.rds_postgres.db_credentials_secret_arn
   sensitive   = true
 }
 
