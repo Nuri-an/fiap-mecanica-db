@@ -1,108 +1,102 @@
 # fiap-mecanica-db
 
-Terraform project for provisioning the managed database (AWS RDS PostgreSQL) used by the application.
+Terraform repository for provisioning the AWS RDS PostgreSQL database used by the application.
 
-## Pipeline
+## What this repo provisions
 
-Workflow: `.github/workflows/terraform.yml`
+- AWS RDS PostgreSQL instance (`postgres` engine, version 15)
+- DB subnet group using private subnets from shared VPC state
+- Security group allowing application access to port `5432`
+- PostgreSQL parameter group
+- Secrets Manager secret for database credentials
+- IAM role and policy for an RDS Proxy to read the secret
+- RDS Proxy and proxy target group attached to the instance
+- Outputs for database endpoint, proxy endpoint, database URL, and secret ARNs
 
-- Pull Request: `fmt` + `init` + `validate` + `plan`
-- Push to `develop`: `init` + `apply` in homolog
-- Push to `main`: `init` + `apply` in production
+## Terraform state and shared infrastructure
 
-## Secrets/Vars (GitHub)
+This repo uses an S3 backend:
 
-Configure `secrets` and `vars` inside each GitHub environment (`Homolog` and `Production`).
+- bucket: `fiap-mecanica-terraform-state`
+- key: `db/terraform.tfstate`
+- region: `us-east-1`
 
-Required secrets:
+It also reads shared platform state from the same bucket:
 
-- `DB_USERNAME`
-- `DB_PASSWORD`
-- `GH_PAT`
-- `TF_API_TOKEN`
+- key: `k8s/terraform.tfstate`
 
-Required vars:
-
-- `TF_CLOUD_ORGANIZATION`
-- `TF_WORKSPACE_HMG`
-- `TF_WORKSPACE_PROD`
-- `TF_PLATFORM_WORKSPACE_HMG`
-- `TF_PLATFORM_WORKSPACE_PROD`
-
-Optional vars:
-
-- `AWS_REGION` (default: `us-east-1`)
-- `PROJECT_NAME` (default: `fiap-mecanica-db`)
-
-## Environments
-
-Create the following GitHub environments:
-
-- `Homolog`
-- `Production`
-
-Recommended source for secrets:
-
-- `DB_USERNAME`: manually configured in GitHub, defined by you for each environment
-- `DB_PASSWORD`: manually configured in GitHub, defined by you for each environment
-- `GH_PAT`: manually configured in GitHub, token with permission to update secrets in another repository
-
-Recommended source for vars:
-
-- `TF_CLOUD_ORGANIZATION`: manually configured in GitHub, Terraform Cloud organization name
-- `TF_WORKSPACE_HMG`: manually configured in GitHub, Terraform Cloud workspace name for this repository's homolog database workspace
-- `TF_WORKSPACE_PROD`: manually configured in GitHub, Terraform Cloud workspace name for this repository's production database workspace
-- `TF_PLATFORM_WORKSPACE_HMG`: manually configured in GitHub, Terraform Cloud workspace name for the shared homolog infrastructure/platform state
-- `TF_PLATFORM_WORKSPACE_PROD`: manually configured in GitHub, Terraform Cloud workspace name for the shared production infrastructure/platform state
-- `AWS_REGION`: manually configured in GitHub, or default `us-east-1`
-- `PROJECT_NAME`: manually configured in GitHub, or default `fiap-mecanica-db`
-
-## `environment` Variable
-
-The Terraform `environment` variable and the GitHub Actions `environment` are different concepts, but they were aligned here:
-
-- `develop` branch uses GitHub Environment `Homolog`
-- `main` branch uses GitHub Environment `Production`
-- each job defines `environment` with the Terraform environment value
-
-In practice:
-
-- `develop` sends `environment=hmg`
-- `main` sends `environment=prod`
-
-This variable reaches `main.tf` and is passed to the `rds_postgres` module as `var.environment`.
-
-## Terraform Cloud
-
-To use Terraform Cloud, the backend in `main.tf` is now `cloud`.
-The real `organization` and `workspace` values are injected during `terraform init` by the example workflow `terraform.yml`.
-
-Suggested workspaces:
-
-- `fiap-mecanica-db-hmg`
-- `fiap-mecanica-db-prod`
-
-The database repository also uses `data "terraform_remote_state"` to read outputs from the shared infrastructure workspace:
+The shared state must expose these outputs:
 
 - `vpc_id`
 - `private_subnet_ids`
 - `app_security_group`
 
-These outputs must exist in the remote platform workspace or in `fiap-mecanica-api`.
+## Main configuration
 
-## Inputs
+The root `main.tf` file:
 
-Required variables to create the RDS inside the network/cluster:
+- configures the AWS provider with `var.aws_region`
+- loads remote state from the shared VPC workspace
+- calls the `modules/rds-postgres` module
 
-- `tfc_organization`
-- `platform_workspace_name`
+Module inputs:
 
-## Cross-repository secret sync
+- `project_name`
+- `environment`
+- `db_username`
+- `db_password`
+- `vpc_id`
+- `private_subnet_ids`
+- `app_security_group`
 
-After a successful apply, the workflow exports the Terraform output
-`database_url` and updates the `DATABASE_URL` GitHub secret in the
-`fiap-mecanica-api` repository.
+## Outputs
 
-This requires:
+The root module exports:
 
-- `GH_PAT` with permission to manage repository secrets
+- `rds_endpoint`
+- `rds_proxy_endpoint`
+- `database_url`
+- `db_secret_arn`
+- `db_credentials_secret_arn`
+
+## GitHub Actions workflow
+
+Workflow: `.github/workflows/terraform.yml`
+
+- `pull_request` on `main` runs plan only
+- `push` on `develop` and `main` runs both plan and apply
+
+Jobs:
+
+- `plan`
+  - Checkout
+  - Configure AWS credentials with `AWS_ROLE_ARN`
+  - Setup Terraform
+  - `terraform init`
+  - `terraform fmt -check -recursive`
+  - `terraform validate`
+  - `terraform plan`
+
+- `apply`
+  - Runs only on push
+  - Uses GitHub environment `staging` for `develop` and `production` for `main`
+  - `terraform apply -auto-approve`
+  - Exports `db_secret_arn`
+  - If `API_REPOSITORY` is provided, syncs `DB_SECRET_ARN` to the API repository
+
+## Required secrets
+
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `AWS_ROLE_ARN`
+- `GH_PAT`
+
+## Optional repository variables
+
+- `AWS_REGION` (default: `us-east-1`)
+- `API_REPOSITORY` (optional repo path used for secret sync, e.g. `org/fiap-mecanica-api`)
+
+## Branch mapping
+
+- `develop` -> `TF_VAR_environment=hmg`, GitHub environment `staging`
+- `main` -> `TF_VAR_environment=prod`, GitHub environment `production`
